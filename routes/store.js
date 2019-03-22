@@ -19,7 +19,31 @@ function getItem(req, res) {
     } else {
         res.json(items[0].value);
     }
+    //der Client bekommt schon die Response, danach wird erst das readRepair ausgeführt
+    //man geht hier davon aus, dass Geschwindigkeit das wichtigste ist. Hauptsache der Client hat eine Antwort, diese
+    //muss nicht zwingend ganz aktuell sein
+    readRepair(req.params.id, items);
 }
+
+function readRepair(id, items){
+    if(global.server_id == 1){ //wir gehen davon aus, dass Server1 der Primary ist
+        return;
+    }
+
+    Request.get({
+        url: "http://127.0.0.1:3000/store/"+id,
+        json: true
+    }, primaryResponse);
+
+    function primaryResponse(error, response, body){
+        if(items.length = 0 || items[0].value != body){
+            items[0].value = body;
+            collection.update(items[0]);
+        }
+    }
+}
+
+
 
 function putItem(req, res) {
     let items = collection.find({key: req.params.id});
